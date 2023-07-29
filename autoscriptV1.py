@@ -292,7 +292,7 @@ def WTScript(window):
             if hasImage("enterbattle", 0.95, "未检测到加入游戏！"):
                 click(getButtonLocation("enterbattle"))
                 screenshot(window)
-                time.sleep(5)
+                time.sleep(3)
                 if hasImage("downloadprompt", 0.98, None):
                     # If the texture download happens to be there, close it
                     click(getButtonLocation("downloadprompt"))
@@ -300,6 +300,7 @@ def WTScript(window):
                     if hasImage("exitout", 0.92, None):
                         click(getButtonLocation(("exitout")))
                         screenshot(window)
+                    time.sleep(3)
                 while window.title.__contains__("等"):
                     time.sleep(5)
                 log("已进入战斗！")
@@ -367,10 +368,10 @@ def WTScript(window):
                     moveMouse(0, -60)
                 elif planeType == 1:
                     moveMouse(0, 60)
-            if i > 300:
+            if i > 500:
                 pressWithDelay("j", 5, 5)
                 i = -100
-            elif i > 350:
+            elif i > 700:
                 # Game is stuck, try to escape
                 log("检测到卡死")
                 timeoutEscape()
@@ -385,7 +386,7 @@ def WTScript(window):
                     click(getButtonLocation("youdied"))
                     getScreen(window, PATH)
                     time.sleep(1)
-                time.sleep(10)
+                time.sleep(12)
                 break
         # game is over
         log("结束战斗，等待结算")
