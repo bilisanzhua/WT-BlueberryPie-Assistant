@@ -255,8 +255,8 @@ def attackPattern():
         lr = (ul[0] + width, ul[1] + height)
         center = (int((ul[0] + lr[0]) / 2), int((ul[1] + lr[1]) / 2))
         deviation = center[0] - pyautogui.position().x
-        moveMouse(int(deviation/2), 0)
-        if center[1] > 330 and center[1] < 380:
+        moveMouse(int(deviation/3), 0)
+        if center[1] > 338 and center[1] < 380:
             for i in range(20):
                 pressWithDelay('space', 0.03, 0.03)
 
@@ -361,7 +361,7 @@ def WTScript(window):
                         pressWithDelay("shift", 0.3, 0.2)
                         pressWithDelay("shift", 0.3, 0.2)
                         pressWithDelay("b", 0.3, 0.3)
-                elif i > 60 and i < 200:
+                elif i > 60 and i < 120:
                     attackPattern()
             if i == 200:
                 if planeType == 0:
@@ -371,10 +371,9 @@ def WTScript(window):
             if i > 500:
                 pressWithDelay("j", 5, 5)
                 i = -100
-            elif i > 700:
+            elif i > 1000:
                 # Game is stuck, try to escape
                 log("检测到卡死")
-                timeoutEscape()
                 getScreen(window, PATH)
                 time.sleep(360)
             if hasImage("youdied", 0.95, None):
