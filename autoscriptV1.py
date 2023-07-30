@@ -67,7 +67,7 @@ PATH = "./pic/screenshot.png"
 f = open('./battlelog/log.txt', 'a+')
 menu = "战争雷霆蓝莓派助手简约（无高级功能）版：\n" \
        "▶图像设定：\n分辨率：1270x720  显示模式：窗口模式\nUI大小：100%\n" \
-       "W仰，S俯，\nshift切换视角，b打开弹仓\n" \
+       "shift切换视角，b打开弹仓\n" \
        "不一定炸得到战区就是了\n"
 
 sg.theme('DarkBlue2')
@@ -85,7 +85,7 @@ gotime = 0
 planeType = -1
 goDie = False
 windowIsAnchored = True
-redMask = (np.array([0,150,150]),np.array([20,255,255]),np.array([160,150,150]),np.array([180,255,255]))
+redMask = (np.array([0,130,130]),np.array([30,255,255]),np.array([150,130,130]),np.array([180,255,255]))
 
 def click(location):
     # click a certain location on the screen
@@ -109,7 +109,7 @@ def log(message):
     try:
         f.write("[" + curr_time + "] " + message + "\n")
     except:
-        print("出现了日志写入错误，可能是计算机之间不同编码的问题吧？")
+        print("log error, but doesn't matter.")
 
 
 def hasImage(name, threshold, message):
@@ -224,6 +224,10 @@ def maneuverPattern(window, baseFound, name):
     img = cv2.imread(PATH)
 
     # img = img[int(img.width/4):int(3*img.width/4),:]
+    if baseFound:
+        onebasemask = np.zeros(img.shape[:2], dtype=np.uint8)
+        onebasemask[120:700, 550:720] = 255
+        img = cv2.bitwise_and(img, img, mask=onebasemask)
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     global redMask
     mask1 = cv2.inRange(hsv, redMask[0], redMask[1])
@@ -236,27 +240,44 @@ def maneuverPattern(window, baseFound, name):
 
 
 def attackPattern():
+    # 读入图像
     img = cv2.imread(PATH)
+    # 第一步：mask掉除了中间一条的其他信息
+    onebasemask = np.zeros(img.shape[:2], dtype=np.uint8)
+    onebasemask[120:600, 570:700] = 255
+    img = cv2.bitwise_and(img, img, mask=onebasemask)
+    # 第二步：提取出红色
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     global redMask
     mask1 = cv2.inRange(hsv, redMask[0], redMask[1])
     mask2 = cv2.inRange(hsv, redMask[2], redMask[3])
     mask = mask1 + mask2
     maskedImg = cv2.bitwise_and(img, img, mask=mask)
-    targetImg = cv2.imread("./model/basebombing.png")
+    # RBG二值化
+    arr = np.array(np.asarray(maskedImg))
+    R = [(1, 255), (1, 255), (1, 255)]
+    red_range = np.logical_and(R[0][0] < arr[:, :, 0], arr[:, :, 0] < R[0][1])
+    green_range = np.logical_and(R[1][0] < arr[:, :, 0], arr[:, :, 0] < R[1][1])
+    blue_range = np.logical_and(R[2][0] < arr[:, :, 0], arr[:, :, 0] < R[2][1])
+    valid_range = np.logical_and(red_range, green_range, blue_range)
+    arr[valid_range] = 255
+    arr[np.logical_not(valid_range)] = 0
+    maskedImg = arr
+    # 开始比对
+    targetImg = cv2.imread("./model/basebombingWhite.png")
     height, width, channel = targetImg.shape
     "start matching"
     result = cv2.matchTemplate(maskedImg, targetImg, cv2.TM_CCORR_NORMED)
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
     print("bombing run\t" + str(max_loc) + "\t" + str(max_val))
-    if max_val > 0.42:
+    if max_val > 0.55:
         print("base in sight")
         ul = cv2.minMaxLoc(result)[3]
         lr = (ul[0] + width, ul[1] + height)
         center = (int((ul[0] + lr[0]) / 2), int((ul[1] + lr[1]) / 2))
         deviation = center[0] - pyautogui.position().x
-        moveMouse(int(deviation/3), 0)
-        if center[1] > 338 and center[1] < 380:
+        moveMouse(int(deviation/4), 0)
+        if center[1] > 335 and center[1] < 390:
             for i in range(20):
                 pressWithDelay('space', 0.03, 0.03)
 
@@ -344,7 +365,7 @@ def WTScript(window):
             screenshot(window)
             if hasImage("pressJ", 0.96, None):
                 pressWithDelay("j", 5, 5)
-            if i == 4:
+            if i == 5:
                 if planeType == 0:
                     moveMouse(0, 60)
                 elif planeType == 1:
@@ -354,14 +375,14 @@ def WTScript(window):
                 time.sleep(0.1)
                 moveMouse(-10, 0)
             if not goDie:
-                if i > 8 and i < 40:
+                if i > 10 and i < 40:
                     foundBase = maneuverPattern(window, foundBase, "basethirdRED")
-                elif i == 60:
+                elif i == 55:
                     if planeType == 0:
                         pressWithDelay("shift", 0.3, 0.2)
                         pressWithDelay("shift", 0.3, 0.2)
                         pressWithDelay("b", 0.3, 0.3)
-                elif i > 60 and i < 120:
+                elif i > 60 and i < 200:
                     attackPattern()
             if i == 200:
                 if planeType == 0:
